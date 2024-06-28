@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH
+
 if [ -z "$1" ]; then
     echo "Usage: $0 <repository>"
     exit 1
@@ -12,10 +14,15 @@ KEEP_TAGS=5
 TAGS=$(curl -s "${REGISTRY_URL}/v2/${REPOSITORY}/tags/list" | jq -r '.tags | sort_by(.) | .[]')
 TO_DELETE=$(echo "${TAGS}" | ghead -n -${KEEP_TAGS})
 
-echo deleting images - ${TO_DELETE}
+echo "images to delete:"
+echo "${TO_DELETE}"
+echo
 
+echo "disabling TLS"
 regctl registry set --tls disabled ${REGISTRY_URL}
+echo
 
+echo "deleting images"
 for tag in ${TO_DELETE}; do
     echo "removing tag - ${tag}"
     regctl tag delete ${REGISTRY_URL}/${REPOSITORY}:${tag}
@@ -25,9 +32,12 @@ for tag in ${TO_DELETE}; do
     docker rmi ${REGISTRY_URL}/${REPOSITORY}:${tag}
     echo
 done
-
-echo "garbage collecting"
-docker exec -it registry bin/registry garbage-collect /etc/docker/registry/config.yml
 echo
 
-echo "deleted images - ${TO_DELETE}"
+echo "garbage collecting"
+docker exec registry bin/registry garbage-collect /etc/docker/registry/config.yml
+echo
+
+echo "deleted images:"
+echo "${TO_DELETE}"
+echo
