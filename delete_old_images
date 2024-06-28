@@ -1,0 +1,33 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    echo "Usage: $0 <repository>"
+    exit 1
+fi
+
+REPOSITORY="$1"
+REGISTRY_URL="localhost:5001"
+KEEP_TAGS=5
+
+TAGS=$(curl -s "${REGISTRY_URL}/v2/${REPOSITORY}/tags/list" | jq -r '.tags | sort_by(.) | .[]')
+TO_DELETE=$(echo "${TAGS}" | ghead -n -${KEEP_TAGS})
+
+echo deleting images - ${TO_DELETE}
+
+regctl registry set --tls disabled ${REGISTRY_URL}
+
+for tag in ${TO_DELETE}; do
+    echo "removing tag - ${tag}"
+    regctl tag delete ${REGISTRY_URL}/${REPOSITORY}:${tag}
+    echo
+
+    echo "removing image - ${tag}"
+    docker rmi ${REGISTRY_URL}/${REPOSITORY}:${tag}
+    echo
+done
+
+echo "garbage collecting"
+docker exec -it registry bin/registry garbage-collect /etc/docker/registry/config.yml
+echo
+
+echo "deleted images - ${TO_DELETE}"
