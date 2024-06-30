@@ -9,7 +9,7 @@ fi
 
 REPOSITORY="$1"
 REGISTRY_URL="localhost:5001"
-KEEP_TAGS=5
+KEEP_TAGS=3
 
 TAGS=$(curl -s "${REGISTRY_URL}/v2/${REPOSITORY}/tags/list" | jq -r '.tags | sort_by(.) | .[]')
 TO_DELETE=$(echo "${TAGS}" | ghead -n -${KEEP_TAGS})
