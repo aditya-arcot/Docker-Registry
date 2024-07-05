@@ -2,42 +2,37 @@
 
 export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH
 
-if [ -z "$1" ]; then
-    echo "Usage: $0 <repository>"
-    exit 1
-fi
-
-REPOSITORY="$1"
 REGISTRY_URL="localhost:5001"
 KEEP_TAGS=3
 
-TAGS=$(curl -s "${REGISTRY_URL}/v2/${REPOSITORY}/tags/list" | jq -r '.tags | sort_by(.) | .[]')
-TO_DELETE=$(echo "${TAGS}" | ghead -n -${KEEP_TAGS})
-
-echo "images to delete:"
-echo "${TO_DELETE}"
-echo
-
 echo "disabling TLS"
-regctl registry set --tls disabled ${REGISTRY_URL}
+regctl registry set --tls disabled ${REGISTRY_URL} 2> /dev/null
 echo
 
-echo "deleting images"
-for tag in ${TO_DELETE}; do
-    echo "removing tag - ${tag}"
-    regctl tag delete ${REGISTRY_URL}/${REPOSITORY}:${tag}
+echo "repos:"
+REPOS=$(regctl repo list ${REGISTRY_URL} 2> /dev/null)
+echo "${REPOS}"
+echo
+
+for REPO in ${REPOS}; do
+    echo "repo - ${REPO}"
+    TAGS=$(curl -s "${REGISTRY_URL}/v2/${REPO}/tags/list" | jq -r '.tags | sort_by(.) | .[]')
+    TO_DELETE=$(echo "${TAGS}" | ghead -n -${KEEP_TAGS})
+
+    echo "tags to delete:"
+    echo "${TO_DELETE}"
     echo
 
-    echo "removing image - ${tag}"
-    docker rmi ${REGISTRY_URL}/${REPOSITORY}:${tag}
-    echo
+    for TAG in ${TO_DELETE}; do
+        echo "tag - ${TAG}"
+        echo "deleting tag"
+        regctl tag delete ${REGISTRY_URL}/${REPO}:${TAG} 2> /dev/null
+
+        echo "removing image"
+        docker rmi ${REGISTRY_URL}/${REPO}:${TAG} &> /dev/null
+        echo
+    done
 done
-echo
 
 echo "garbage collecting"
-docker exec registry bin/registry garbage-collect /etc/docker/registry/config.yml
-echo
-
-echo "deleted images:"
-echo "${TO_DELETE}"
-echo
+docker exec registry bin/registry garbage-collect /etc/docker/registry/config.yml &> /dev/null
