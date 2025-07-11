@@ -1,16 +1,19 @@
 #!/bin/bash
 
-export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH
+set -euo pipefail
+
+PATH=/usr/local/bin:$PATH
+PATH=/opt/homebrew/bin:$PATH
 
 REGISTRY_URL="localhost:5001"
 KEEP_TAGS=3
 
 echo "disabling TLS"
-regctl registry set --tls disabled ${REGISTRY_URL} 2> /dev/null
+regctl registry set --tls disabled ${REGISTRY_URL}
 echo
 
 echo "repos:"
-REPOS=$(regctl repo list ${REGISTRY_URL} 2> /dev/null)
+REPOS=$(regctl repo list ${REGISTRY_URL})
 echo "${REPOS}"
 echo
 
@@ -26,7 +29,7 @@ for REPO in ${REPOS}; do
     for TAG in ${TO_DELETE}; do
         echo "tag - ${TAG}"
         echo "deleting tag"
-        regctl tag delete ${REGISTRY_URL}/${REPO}:${TAG} 2> /dev/null
+        regctl tag delete ${REGISTRY_URL}/${REPO}:${TAG}
 
         echo "removing image"
         docker rmi ${REGISTRY_URL}/${REPO}:${TAG} &> /dev/null
