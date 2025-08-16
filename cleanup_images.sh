@@ -32,10 +32,10 @@ for REPO in ${REPOS}; do
         regctl tag delete ${REGISTRY_URL}/${REPO}:${TAG}
 
         echo "removing image"
-        docker rmi ${REGISTRY_URL}/${REPO}:${TAG} &> /dev/null
+        docker rmi ${REGISTRY_URL}/${REPO}:${TAG} > /dev/null
         echo
     done
 done
 
 echo "garbage collecting"
-docker exec registry bin/registry garbage-collect /etc/docker/registry/config.yml &> /dev/null
+docker exec registry bin/registry garbage-collect /etc/docker/registry/config.yml > /dev/null
