@@ -19,7 +19,7 @@ echo
 
 for REPO in ${REPOS}; do
     echo "repo - ${REPO}"
-    TAGS=$(curl -s "${REGISTRY_URL}/v2/${REPO}/tags/list" | jq -r '.tags | sort_by(.) | .[]')
+    TAGS=$(curl -s "${REGISTRY_URL}/v2/${REPO}/tags/list" | jq -r '.tags // [] | sort | .[]')
     TO_DELETE=$(echo "${TAGS}" | ghead -n -${KEEP_TAGS})
 
     echo "tags to delete:"
