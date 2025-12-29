@@ -16,7 +16,7 @@ services:
     image: joxit/docker-registry-ui:latest
     restart: always
     ports:
-      - 8000:80
+      - 8001:80
     environment:
       - SINGLE_REGISTRY=true
       - REGISTRY_TITLE=Private Registry
