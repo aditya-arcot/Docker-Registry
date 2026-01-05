@@ -1,0 +1,8 @@
+version: 0.1
+storage:
+    filesystem:
+        rootdirectory: /data
+    delete:
+        enabled: true
+http:
+    addr: :5000

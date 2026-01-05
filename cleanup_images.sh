@@ -38,4 +38,4 @@ for REPO in ${REPOS}; do
 done
 
 echo "garbage collecting"
-docker exec registry bin/registry garbage-collect /etc/docker/registry/config.yml > /dev/null
+docker exec registry bin/registry garbage-collect /etc/docker/registry/config.yml --delete-untagged

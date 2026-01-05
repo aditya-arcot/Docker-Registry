@@ -1,3 +1,4 @@
 data/
 .megaignore
 .DS_Store
+.env
