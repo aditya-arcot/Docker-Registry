@@ -13,7 +13,7 @@ services:
             - REGISTRY_STORAGE_DELETE_ENABLED=true
         volumes:
             - ./data:/data
-            - ./config.yml:/etc/docker/registry/config.yml:ro
+            - ./config/config.yml:/etc/docker/registry/config.yml:ro
 
         labels:
             - traefik.enable=true
