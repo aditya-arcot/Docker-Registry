@@ -1,27 +1,40 @@
 name: docker-registry
+
 services:
     registry:
         image: registry:latest
         container_name: registry
         restart: unless-stopped
+        networks:
+            - traefik-public
 
         environment:
             - REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/data
             - REGISTRY_STORAGE_DELETE_ENABLED=true
-        ports:
-            - ${REGISTRY_PORT?}:5000
         volumes:
             - ./data:/data
             - ./config.yml:/etc/docker/registry/config.yml:ro
+
+        labels:
+            - traefik.enable=true
+            - traefik.prod=true
+
+            - traefik.http.routers.registry.rule=Host(`registry.${DOMAIN?}`)
+            - traefik.http.routers.registry.entrypoints=websecure
+
+            - traefik.http.middlewares.registry-auth.basicauth.users=${USER_HASH?}
+            - traefik.http.routers.registry.middlewares=registry-auth@docker
 
     registry-ui:
         image: joxit/docker-registry-ui:latest
         container_name: registry-ui
         restart: unless-stopped
+        networks:
+            - traefik-public
 
         environment:
             - SINGLE_REGISTRY=true
-            - REGISTRY_TITLE=Private Registry
+            - REGISTRY_TITLE=Registry
             - DELETE_IMAGES=true
             - SHOW_CONTENT_DIGEST=true
             - NGINX_PROXY_PASS_URL=http://registry:5000
@@ -29,7 +42,17 @@ services:
             - CATALOG_MIN_BRANCHES=1
             - CATALOG_MAX_BRANCHES=1
             - TAGLIST_PAGE_SIZE=100
-            - REGISTRY_SECURED=false
+            - REGISTRY_SECURED=true
             - CATALOG_ELEMENTS_LIMIT=1000
-        ports:
-            - ${REGISTRY_UI_PORT?}:80
+
+        labels:
+            - traefik.enable=true
+            - traefik.prod=true
+
+            - traefik.http.routers.registry-ui.rule=Host(`registry-ui.${DOMAIN?}`)
+            - traefik.http.routers.registry-ui.entrypoints=websecure
+            - traefik.http.routers.registry-ui.middlewares=registry-auth@docker
+
+networks:
+    traefik-public:
+        external: true

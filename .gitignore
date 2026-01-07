@@ -1,4 +1,7 @@
-data/
-.megaignore
 .DS_Store
-.env
+.megaignore
+
+data/
+
+.env*
+!.env*.example
