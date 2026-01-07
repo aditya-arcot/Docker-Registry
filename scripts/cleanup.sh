@@ -6,7 +6,7 @@ BASE_DIR="$SCRIPT_DIR/.."
 CONFIG_DIR="$BASE_DIR/config"
 
 source "$CONFIG_DIR/.env"
-export REGISTRY_URL="https://registry.${DOMAIN}"
+export REGISTRY_URL="registry.${DOMAIN}"
 export CONTAINER="registry"
 
 ./cleanup_images.sh
