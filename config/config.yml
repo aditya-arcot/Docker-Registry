@@ -14,9 +14,6 @@ http:
     headers:
         X-Content-Type-Options: [nosniff]
 
-proxy:
-    remoteurl: https://registry.${DOMAIN}
-
 health:
     storagedriver:
         enabled: true
