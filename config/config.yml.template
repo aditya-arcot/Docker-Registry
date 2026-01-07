@@ -15,7 +15,7 @@ http:
         X-Content-Type-Options: [nosniff]
 
 proxy:
-    remoteurl: ${REMOTE_URL}
+    remoteurl: https://registry.${DOMAIN}
 
 health:
     storagedriver:
