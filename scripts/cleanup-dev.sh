@@ -10,4 +10,4 @@ export REGISTRY_URL="localhost:${REGISTRY_PORT}"
 export CONTAINER="registry-dev"
 
 regctl registry set --tls disabled ${REGISTRY_URL}
-./cleanup_images.sh
+"${SCRIPT_DIR}/cleanup_images.sh"

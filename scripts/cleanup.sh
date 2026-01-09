@@ -10,4 +10,4 @@ export REGISTRY_URL="registry.${DOMAIN}"
 export CONTAINER="registry"
 
 echo "${PASSWORD}" | regctl registry login ${REGISTRY_URL} -u "${USERNAME}" --pass-stdin
-./cleanup_images.sh
+"${SCRIPT_DIR}/cleanup_images.sh"
