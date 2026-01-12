@@ -52,23 +52,26 @@ for REPO in ${REPOS}; do
     else
         TAGS=$(curl -u "${USERNAME}:${PASSWORD}" -s "https://${REGISTRY_URL}/v2/${REPO}/tags/list")
     fi
+
     TAGS=$(echo "${TAGS}" | jq -r '.tags // [] | sort | .[]')
     echo "Tags:"
     echo "${TAGS}"
-    TO_DELETE=$(echo "${TAGS}" | ghead -n -${KEEP_TAGS})
+    echo
 
+    TO_DELETE=$(echo "${TAGS}" | ghead -n -${KEEP_TAGS})
     echo "Tags to delete:"
     echo "${TO_DELETE}"
-    echo
 
     for TAG in ${TO_DELETE}; do
         echo "Deleting tag - ${TAG}"
         regctl tag delete ${REGISTRY_URL}/${REPO}:${TAG}
     done
+    echo
 done
 
 echo "Garbage collecting"
 docker exec $CONTAINER bin/registry garbage-collect /etc/docker/registry/config.yml --delete-untagged
+echo
 
 echo "Pruning docker system"
 docker system prune -a --volumes -f
