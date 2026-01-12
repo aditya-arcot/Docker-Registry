@@ -64,12 +64,11 @@ for REPO in ${REPOS}; do
     for TAG in ${TO_DELETE}; do
         echo "Deleting tag - ${TAG}"
         regctl tag delete ${REGISTRY_URL}/${REPO}:${TAG}
-
-        echo "Removing image"
-        docker rmi ${REGISTRY_URL}/${REPO}:${TAG} > /dev/null
-        echo
     done
 done
 
 echo "Garbage collecting"
 docker exec $CONTAINER bin/registry garbage-collect /etc/docker/registry/config.yml --delete-untagged
+
+echo "Pruning docker system"
+docker system prune -a --volumes -f
