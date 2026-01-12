@@ -4,46 +4,72 @@ set -Eeuo pipefail
 PATH=/usr/local/bin:$PATH
 PATH=/opt/homebrew/bin:$PATH
 
-if [ -z ${REGISTRY_URL:-} ]; then
-    echo "REGISTRY_URL must be set. Use cleanup.sh or cleanup-dev.sh"
-    exit 1
-fi
-echo "REGISTRY_URL: $REGISTRY_URL"
+DEV=false
 
-if [ -z ${CONTAINER:-} ]; then
-    echo "CONTAINER must be set. Use cleanup.sh or cleanup-dev.sh"
-    exit 1
+while getopts "d" opt; do
+    case "$opt" in
+    d) DEV=true ;;
+    \?) exit 1 ;;
+    esac
+done
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+BASE_DIR="$SCRIPT_DIR/.."
+CONFIG_DIR="$BASE_DIR/config"
+
+ENV_FILE=".env"
+if [ "$DEV" = true ]; then
+    ENV_FILE=".env.dev"
 fi
-echo "CONTAINER: $CONTAINER"
+
+set -a
+source "$CONFIG_DIR/$ENV_FILE"
+set +a
+
+if [ "$DEV" = true ]; then
+    export REGISTRY_URL="localhost:${REGISTRY_PORT}"
+    export CONTAINER="registry-dev"
+    regctl registry set --tls disabled ${REGISTRY_URL}
+else
+    export REGISTRY_URL="registry.${DOMAIN}"
+    export CONTAINER="registry"
+    echo "${PASSWORD}" | regctl registry login ${REGISTRY_URL} -u "${USERNAME}" --pass-stdin
+fi
 
 KEEP_TAGS=3
 echo "Keeping last ${KEEP_TAGS} tags per repository"
 echo
 
-echo "repos:"
+echo "Repos:"
 REPOS=$(regctl repo list ${REGISTRY_URL})
 echo "${REPOS}"
 echo
 
 for REPO in ${REPOS}; do
-    echo "repo - ${REPO}"
-    TAGS=$(curl -s "${REGISTRY_URL}/v2/${REPO}/tags/list" | jq -r '.tags // [] | sort | .[]')
+    echo "Repo - ${REPO}"
+    if [ "$DEV" = true ]; then
+        TAGS=$(curl -s "http://${REGISTRY_URL}/v2/${REPO}/tags/list")
+    else
+        TAGS=$(curl -u "${USERNAME}:${PASSWORD}" -s "https://${REGISTRY_URL}/v2/${REPO}/tags/list")
+    fi
+    TAGS=$(echo "${TAGS}" | jq -r '.tags // [] | sort | .[]')
+    echo "Tags:"
+    echo "${TAGS}"
     TO_DELETE=$(echo "${TAGS}" | ghead -n -${KEEP_TAGS})
 
-    echo "tags to delete:"
+    echo "Tags to delete:"
     echo "${TO_DELETE}"
     echo
 
     for TAG in ${TO_DELETE}; do
-        echo "tag - ${TAG}"
-        echo "deleting tag"
+        echo "Deleting tag - ${TAG}"
         regctl tag delete ${REGISTRY_URL}/${REPO}:${TAG}
 
-        echo "removing image"
+        echo "Removing image"
         docker rmi ${REGISTRY_URL}/${REPO}:${TAG} > /dev/null
         echo
     done
 done
 
-echo "garbage collecting"
+echo "Garbage collecting"
 docker exec $CONTAINER bin/registry garbage-collect /etc/docker/registry/config.yml --delete-untagged
