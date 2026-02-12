@@ -47,6 +47,12 @@ echo
 
 for REPO in ${REPOS}; do
     echo "Repo - ${REPO}"
+    if [[ "$REPO" == cache/* ]]; then
+        echo "Skipping cache repository"
+        echo
+        continue
+    fi
+
     if [ "$DEV" = true ]; then
         TAGS=$(curl -s "http://${REGISTRY_URL}/v2/${REPO}/tags/list")
     else
