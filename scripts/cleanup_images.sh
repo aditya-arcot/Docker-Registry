@@ -17,17 +17,14 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BASE_DIR="$SCRIPT_DIR/.."
 CONFIG_DIR="$BASE_DIR/config"
 
-ENV_FILE=".env"
-if [ "$DEV" = true ]; then
-    ENV_FILE=".env.dev"
+if [ "$DEV" = false ]; then
+    set -a
+    source "$CONFIG_DIR/.env"
+    set +a
 fi
 
-set -a
-source "$CONFIG_DIR/$ENV_FILE"
-set +a
-
 if [ "$DEV" = true ]; then
-    export REGISTRY_URL="localhost:${REGISTRY_PORT}"
+    export REGISTRY_URL="registry.localhost"
     export CONTAINER="registry-dev"
     regctl registry set --tls disabled ${REGISTRY_URL}
 else
