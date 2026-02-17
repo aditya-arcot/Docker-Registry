@@ -31,7 +31,7 @@ if [ "$DEV" = true ]; then
     export CONTAINER="registry-dev"
     regctl registry set --tls disabled ${REGISTRY_URL}
 else
-    export REGISTRY_URL="registry.${DOMAIN}"
+    export REGISTRY_URL="registry.aarcot.com"
     export CONTAINER="registry"
     echo "${PASSWORD}" | regctl registry login ${REGISTRY_URL} -u "${USERNAME}" --pass-stdin
 fi

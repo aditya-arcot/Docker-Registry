@@ -18,7 +18,7 @@ services:
             - traefik.enable=true
             - traefik.prod=true
 
-            - traefik.http.routers.registry.rule=Host(`registry.${DOMAIN?}`)
+            - traefik.http.routers.registry.rule=Host(`registry.aarcot.com`)
             - traefik.http.routers.registry.entrypoints=websecure
 
             - traefik.http.middlewares.registry-auth.basicauth.users=${USER_HASH?}
@@ -48,7 +48,7 @@ services:
             - traefik.enable=true
             - traefik.prod=true
 
-            - traefik.http.routers.registry-ui.rule=Host(`registry-ui.${DOMAIN?}`)
+            - traefik.http.routers.registry-ui.rule=Host(`registry-ui.aarcot.com`)
             - traefik.http.routers.registry-ui.entrypoints=websecure
             - traefik.http.routers.registry-ui.middlewares=registry-auth@docker
 
