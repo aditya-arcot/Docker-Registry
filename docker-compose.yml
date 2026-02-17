@@ -9,10 +9,9 @@ services:
             - traefik-public
 
         environment:
-            - REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/data
             - REGISTRY_STORAGE_DELETE_ENABLED=true
         volumes:
-            - ./data:/data
+            - ./data:/var/lib/registry
             - ./config/config.yml:/etc/docker/registry/config.yml:ro
 
         labels:
