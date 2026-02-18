@@ -1,8 +1,13 @@
 #!/bin/bash
 set -Eeuo pipefail
 
-PATH=/usr/local/bin:$PATH
-PATH=/opt/homebrew/bin:$PATH
+if [ -d "/usr/local/bin" ]; then
+    PATH="/usr/local/bin:${PATH}"
+fi
+
+if [ -d "/opt/homebrew/bin" ]; then
+    PATH="/opt/homebrew/bin:${PATH}"
+fi
 
 DEV=false
 
@@ -33,6 +38,11 @@ else
     echo "${PASSWORD}" | regctl registry login ${REGISTRY_URL} -u "${USERNAME}" --pass-stdin
 fi
 
+HEAD_CMD="head"
+if [[ "$(uname -s)" == "Darwin" ]] && command -v ghead >/dev/null 2>&1; then
+    HEAD_CMD="ghead"
+fi
+
 KEEP_TAGS=3
 echo "Keeping last ${KEEP_TAGS} tags per repository"
 echo
@@ -61,7 +71,7 @@ for REPO in ${REPOS}; do
     echo "${TAGS}"
     echo
 
-    TO_DELETE=$(echo "${TAGS}" | ghead -n -${KEEP_TAGS})
+    TO_DELETE=$(echo "${TAGS}" | ${HEAD_CMD} -n -${KEEP_TAGS})
     echo "Tags to delete:"
     echo "${TO_DELETE}"
 
