@@ -1,4 +1,4 @@
-name: docker-registry
+name: registry
 
 services:
     registry:

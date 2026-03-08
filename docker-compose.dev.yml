@@ -1,7 +1,7 @@
-name: docker-registry-dev
+name: registry-dev
 
 services:
-    registry:
+    registry-dev:
         image: registry:latest
         container_name: registry-dev
         restart: no
@@ -19,7 +19,7 @@ services:
             - traefik.http.routers.registry.rule=Host(`registry.localhost`)
             - traefik.http.routers.registry.entrypoints=web
 
-    registry-ui:
+    registry-ui-dev:
         image: joxit/docker-registry-ui:latest
         container_name: registry-ui-dev
         restart: no
@@ -31,7 +31,7 @@ services:
             - REGISTRY_TITLE=Dev Registry
             - DELETE_IMAGES=true
             - SHOW_CONTENT_DIGEST=true
-            - NGINX_PROXY_PASS_URL=http://registry:5000
+            - NGINX_PROXY_PASS_URL=http://registry-dev:5000
             - SHOW_CATALOG_NB_TAGS=true
             - CATALOG_MIN_BRANCHES=1
             - CATALOG_MAX_BRANCHES=1
