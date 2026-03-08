@@ -18,11 +18,18 @@ services:
             - traefik.enable=true
             - traefik.prod=true
 
-            - traefik.http.routers.registry.rule=Host(`registry.aarcot.com`)
-            - traefik.http.routers.registry.entrypoints=websecure
+            - traefik.http.services.registry.loadbalancer.server.port=5000
 
             - traefik.http.middlewares.registry-auth.basicauth.users=${USER_HASH?}
+
+            - traefik.http.routers.registry.rule=Host(`registry.aarcot.com`)
+            - traefik.http.routers.registry.entrypoints=websecure
             - traefik.http.routers.registry.middlewares=registry-auth@docker
+
+            - traefik.http.routers.registry-health.rule=Host(`registry.aarcot.com`) && Path(`/v2/`)
+            - traefik.http.routers.registry-health.entrypoints=websecure
+            - traefik.http.routers.registry-health.priority=100
+            - traefik.http.routers.registry-health.service=registry
 
     registry-ui:
         image: joxit/docker-registry-ui:latest
