@@ -6,4 +6,5 @@ BASE_DIR="$SCRIPT_DIR/.."
 CONFIG_DIR="$BASE_DIR/config"
 
 docker network create traefik-public || true
+docker compose -f "$BASE_DIR/docker-compose.dev.yml" pull
 docker compose -f "$BASE_DIR/docker-compose.dev.yml" up -d
