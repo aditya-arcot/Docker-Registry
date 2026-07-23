@@ -1,13 +1,9 @@
 #!/bin/bash
 set -Eeuo pipefail
 
-if [ -d "/usr/local/bin" ]; then
-    PATH="/usr/local/bin:${PATH}"
-fi
-
-if [ -d "/opt/homebrew/bin" ]; then
-    PATH="/opt/homebrew/bin:${PATH}"
-fi
+PATH=/usr/local/bin:$PATH
+PATH=/opt/homebrew/bin:$PATH
+PATH=/home/linuxbrew/.linuxbrew/bin:$PATH
 
 DEV=false
 
@@ -39,7 +35,7 @@ else
 fi
 
 HEAD_CMD="head"
-if [[ "$(uname -s)" == "Darwin" ]] && command -v ghead >/dev/null 2>&1; then
+if [[ "$(uname -s)" == "Darwin" ]] && command -v ghead > /dev/null 2>&1; then
     HEAD_CMD="ghead"
 fi
 
