@@ -81,6 +81,3 @@ done
 echo "Garbage collecting"
 docker exec $CONTAINER bin/registry garbage-collect /etc/docker/registry/config.yml --delete-untagged
 echo
-
-echo "Pruning docker system"
-docker system prune -a --volumes -f
