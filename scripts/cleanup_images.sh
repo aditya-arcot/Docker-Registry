@@ -81,3 +81,8 @@ done
 echo "Garbage collecting"
 docker exec $CONTAINER bin/registry garbage-collect /etc/docker/registry/config.yml --delete-untagged
 echo
+
+# clear in-memory cache
+echo "Restarting registry"
+docker restart $CONTAINER
+echo
