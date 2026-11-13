@@ -34,13 +34,8 @@ else
     echo "${PASSWORD}" | regctl registry login ${REGISTRY_URL} -u "${USERNAME}" --pass-stdin
 fi
 
-HEAD_CMD="head"
-if [[ "$(uname -s)" == "Darwin" ]] && command -v ghead > /dev/null 2>&1; then
-    HEAD_CMD="ghead"
-fi
-
 KEEP_TAGS=3
-echo "Keeping last ${KEEP_TAGS} tags per repository"
+echo "Keeping newest ${KEEP_TAGS} tags per repository"
 echo
 
 echo "Repos:"
@@ -62,18 +57,32 @@ for REPO in ${REPOS}; do
         TAGS=$(curl -u "${USERNAME}:${PASSWORD}" -s "https://${REGISTRY_URL}/v2/${REPO}/tags/list")
     fi
 
-    TAGS=$(echo "${TAGS}" | jq -r '.tags // [] | sort | .[]')
+    TAGS=$(echo "${TAGS}" | jq -r '.tags // [] | .[]')
     echo "Tags:"
     echo "${TAGS}"
     echo
 
-    TO_DELETE=$(echo "${TAGS}" | ${HEAD_CMD} -n -${KEEP_TAGS})
+    TAG_TIMESTAMPS=""
+    for TAG in ${TAGS}; do
+        # use timestamps to avoid inconsistencies in tag names
+        if ! CREATED=$(regctl image inspect "${REGISTRY_URL}/${REPO}:${TAG}" \
+            --format '{{if .Created}}{{.Created.UnixNano}}{{end}}') ||
+            [[ ! "$CREATED" =~ ^-?[0-9]+$ ]]; then
+            echo "Skipping repository ${REPO}: cannot read creation time for ${TAG}" >&2
+            continue 2
+        fi
+        TAG_TIMESTAMPS+="${CREATED} ${TAG}"$'\n'
+    done
+
+    # newest first, then sort by tag name to break ties
+    TO_DELETE=$(printf '%s' "$TAG_TIMESTAMPS" | LC_ALL=C sort -k1,1nr -k2,2 |
+        awk -v keep="$KEEP_TAGS" 'NF && NR > keep {print $2}')
     echo "Tags to delete:"
     echo "${TO_DELETE}"
 
     for TAG in ${TO_DELETE}; do
         echo "Deleting tag - ${TAG}"
-        regctl tag delete ${REGISTRY_URL}/${REPO}:${TAG}
+        regctl tag delete "${REGISTRY_URL}/${REPO}:${TAG}"
     done
     echo
 done
