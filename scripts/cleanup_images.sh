@@ -34,6 +34,35 @@ else
     echo "${PASSWORD}" | regctl registry login ${REGISTRY_URL} -u "${USERNAME}" --pass-stdin
 fi
 
+GC_CONTAINER="${CONTAINER}-gc"
+GC_IMAGE=$(docker inspect --format '{{.Image}}' "$CONTAINER")
+RESTART_REGISTRY=false
+
+on_exit() {
+    local exit_code=$?
+    trap - EXIT
+    trap '' INT TERM
+
+    if ! docker stop "$GC_CONTAINER" > /dev/null; then
+        echo "Cannot stop ${GC_CONTAINER}; leaving registry stopped for safety" >&2
+        exit 1
+    fi
+    if [ "$RESTART_REGISTRY" = true ]; then
+        echo "Starting registry"
+        docker start "$CONTAINER" || exit_code=1
+    fi
+    docker rm "$GC_CONTAINER" > /dev/null || exit_code=1
+    exit "$exit_code"
+}
+
+docker create --name "$GC_CONTAINER" --network none --volumes-from "$CONTAINER" \
+    --entrypoint /bin/registry "$GC_IMAGE" garbage-collect \
+    /etc/docker/registry/config.yml --delete-untagged > /dev/null
+
+trap on_exit EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
 KEEP_TAGS=3
 echo "Keeping newest ${KEEP_TAGS} tags per repository"
 echo
@@ -87,11 +116,9 @@ for REPO in ${REPOS}; do
     echo
 done
 
-echo "Garbage collecting"
-docker exec $CONTAINER bin/registry garbage-collect /etc/docker/registry/config.yml --delete-untagged
-echo
+echo "Stopping registry for garbage collection"
+RESTART_REGISTRY=true
+docker stop "$CONTAINER"
 
-# clear in-memory cache
-echo "Restarting registry"
-docker restart $CONTAINER
-echo
+echo "Garbage collecting offline"
+docker start -a "$GC_CONTAINER"
